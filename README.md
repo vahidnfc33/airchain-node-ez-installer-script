@@ -278,10 +278,10 @@ fi
 #TheEND !
 
 ```
-و در اخر هم دکمه ترکیبی ctrl+x بعد y بعد هم اینتر رو بزنید که ذخیره بشه بعد با دستور زیر اجراش کنید
+و در اخر هم دکمه ترکیبی ctrl+x بعد y بعدهم اینتر رو بزنید که ذخیره بشه بعد با دستور زیر اجراش کنید
 
 
-    nano airchain-install.sh
+    bash airchain-install.sh
     
 ![image](https://github.com/user-attachments/assets/5f1f4efd-799b-4c5a-83ad-203e5dfa20eb)
 
