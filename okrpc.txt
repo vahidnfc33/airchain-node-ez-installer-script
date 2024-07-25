@@ -1,3 +1,2 @@
 https://airchains-testnet-rpc.crouton.digital/
-https://airchains-rpc.kubenode.xyz/
 https://junction-testnet-rpc.synergynodes.com/
