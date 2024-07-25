@@ -1,4 +1,1 @@
-https://t-airchains.rpc.utsa.tech/
-https://airchains.rpc.t.stavr.tech/
-https://airchains-rpc.chainad.org/
-https://junction-rpc.kzvn.xyz/
+https://airchains-testnet-rpc.crouton.digital/
