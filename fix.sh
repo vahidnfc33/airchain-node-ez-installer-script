@@ -1,5 +1,9 @@
 #!/bin/bash
 
+script_url="https://raw.githubusercontent.com/vahidnfc33/airchain-node-ez-installer-script/main/fix.sh"
+script_path=$(readlink -f "$0")
+update_interval=3600  # 1 hour in seconds
+
 # Define service name and log search strings
 service_name="stationd"
 error_string="ERROR|error|Failed"
@@ -12,10 +16,30 @@ rate_limit_blob_error="rpc error: code = ResourceExhausted desc = request rateli
 err_string="ERR"
 retry_transaction_string="Retrying the transaction after 10 seconds..."
 verify_pod_error_string="Error in VerifyPod transaction Error"
-conf_load_error_string="Failed to load conf info"  # New error string
+conf_load_error_string="Failed to load conf info"
 restart_delay=180
 config_file="$HOME/.tracks/config/sequencer.toml"
-rpc_file="$HOME/okrpc.txt"  # Path to the file containing RPC URLs
+rpc_file="$HOME/okrpc.txt"
+
+# Function to update the script
+update_script() {
+    echo "Checking for script updates..."
+    temp_file=$(mktemp)
+    if curl -s "$script_url" -o "$temp_file"; then
+        if ! cmp -s "$temp_file" "$script_path"; then
+            echo "New version found. Updating script..."
+            cp "$temp_file" "$script_path"
+            chmod +x "$script_path"
+            echo "Script updated successfully. Restarting..."
+            exec bash "$script_path"
+        else
+            echo "Script is up to date."
+        fi
+    else
+        echo "Failed to check for updates."
+    fi
+    rm "$temp_file"
+}
 
 # Function to download the RPC file from GitHub
 download_rpc_file() {
@@ -26,15 +50,25 @@ download_rpc_file() {
 
 # Function to select a random URL from the file
 select_random_url() {
-    # Select a random line from the file and remove any carriage return characters
     random_url=$(shuf -n 1 "$rpc_file" | tr -d '\r')
     echo "$random_url"
 }
 
 echo "Script started to monitor errors in PC logs..."
-echo "by onixia"
+echo "New update for test. script Fix airchain RUN"
+
+# Update script at startup
+update_script
+
+last_update_time=$(date +%s)
 
 while true; do
+    current_time=$(date +%s)
+    if [ $((current_time - last_update_time)) -ge $update_interval ]; then
+        update_script
+        last_update_time=$current_time
+    fi
+
     # Get the last 10 lines of service logs
     logs=$(systemctl status "$service_name" --no-pager | tail -n 10)
 
