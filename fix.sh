@@ -1,51 +1,61 @@
 #!/bin/bash
 
+# Color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Unicode symbols
+CHECK_MARK="\xE2\x9C\x94"
+CROSS_MARK="\xE2\x9C\x98"
+ROCKET="\xF0\x9F\x9A\x80"
+WRENCH="\xF0\x9F\x94\xA7"
+HOURGLASS="\xE2\x8C\x9B"
+
 script_url="https://raw.githubusercontent.com/vahidnfc33/airchain-node-ez-installer-script/main/fix.sh"
 script_path=$(readlink -f "$0")
-update_interval=3600  # 1 hour in seconds
+hash_file="$HOME/.fix_script_hash"
+update_interval=300  # 5 minutes in seconds
 
 # Define service name and log search strings
 service_name="stationd"
-error_string="ERROR|error|Failed"
-gas_string="with gas used"
-vrf_error_string="Failed to Init VRF"
-client_error_string="Client connection error: error while requesting node"
-balance_error_string="Error in getting sender balance : http post error: Post"
-rate_limit_error_string="rpc error: code = ResourceExhausted desc = request ratelimited"
-rate_limit_blob_error="rpc error: code = ResourceExhausted desc = request ratelimited: System blob rate limit for quorum 0"
-err_string="ERR"
-retry_transaction_string="Retrying the transaction after 10 seconds..."
-verify_pod_error_string="Error in VerifyPod transaction Error"
-conf_load_error_string="Failed to load conf info"
-restart_delay=180
+error_string="ERROR|error|Failed|ERR|with gas used|Failed to Init VRF|Client connection error: error while requesting node|Error in getting sender balance : http post error: Post|rpc error: code = ResourceExhausted desc = request ratelimited|rpc error: code = ResourceExhausted desc = request ratelimited: System blob rate limit for quorum 0|Retrying the transaction after 10 seconds...|Error in VerifyPod transaction Error|Error in ValidateVRF transaction Error|Failed to get transaction by hash: not found|json_rpc_error_string: error while requesting node|can not get junctionDetails.json data|JsonRPC should not be empty at config file|Error in getting address|Failed to load conf info|error unmarshalling config|Error in initiating sequencer nodes due to the above error|Failed to Transact Verify pod| VRF record is nil"
+restart_delay=120
 config_file="$HOME/.tracks/config/sequencer.toml"
 rpc_file="$HOME/okrpc.txt"
 
 # Function to update the script
 update_script() {
-    echo "Checking for script updates..."
+    echo -e "${BLUE}${WRENCH} Checking for script updates...${NC}"
     temp_file=$(mktemp)
     if curl -s "$script_url" -o "$temp_file"; then
-        if ! cmp -s "$temp_file" "$script_path"; then
-            echo "New version found. Updating script..."
+        new_hash=$(md5sum "$temp_file" | awk '{print $1}')
+        old_hash=""
+        [[ -f "$hash_file" ]] && old_hash=$(cat "$hash_file")
+        
+        if [[ "$new_hash" != "$old_hash" ]]; then
+            echo -e "${GREEN}${ROCKET} New version found. Updating script...${NC}"
             cp "$temp_file" "$script_path"
             chmod +x "$script_path"
-            echo "Script updated successfully. Restarting..."
+            echo "$new_hash" > "$hash_file"
+            echo -e "${GREEN}${CHECK_MARK} Script updated successfully. Restarting...${NC}"
             exec bash "$script_path"
         else
-            echo "Script is up to date."
+            echo -e "${GREEN}${CHECK_MARK} Script is up to date.${NC}"
         fi
     else
-        echo "Failed to check for updates."
+        echo -e "${RED}${CROSS_MARK} Failed to check for updates.${NC}"
     fi
     rm "$temp_file"
 }
 
 # Function to download the RPC file from GitHub
 download_rpc_file() {
-    echo "Downloading latest RPC list..."
+    echo -e "${BLUE}${WRENCH} Downloading latest RPC list...${NC}"
     curl -s https://raw.githubusercontent.com/vahidnfc33/airchain-node-ez-installer-script/main/okrpc.txt | tr -d '\r' > "$rpc_file"
-    echo "RPC list updated."
+    echo -e "${GREEN}${CHECK_MARK} RPC list updated.${NC}"
 }
 
 # Function to select a random URL from the file
@@ -54,26 +64,21 @@ select_random_url() {
     echo "$random_url"
 }
 
-echo "Script started to monitor errors in PC logs..."
-echo "New update for test. script Fix airchain RUN"
+echo -e "${YELLOW}${ROCKET} Script started to monitor errors in PC logs...${NC}"
+echo -e "${YELLOW}${ROCKET} Airchain fix script RUN${NC}"
 
 # Update script at startup
 update_script
 
-last_update_time=$(date +%s)
-
 while true; do
-    current_time=$(date +%s)
-    if [ $((current_time - last_update_time)) -ge $update_interval ]; then
-        update_script
-        last_update_time=$current_time
-    fi
+    # Check for updates in each loop iteration
+    update_script
 
     # Get the last 10 lines of service logs
     logs=$(systemctl status "$service_name" --no-pager | tail -n 10)
 
-    if echo "$logs" | grep -Eqi "$error_string|$retry_transaction_string|$verify_pod_error_string|$vrf_error_string|$client_error_string|$balance_error_string|$rate_limit_error_string|$rate_limit_blob_error|$err_string|$conf_load_error_string"; then
-        echo "Found error in logs, updating RPC list and $config_file, then restarting $service_name..."
+    if echo "$logs" | grep -Eqi "$error_string"; then
+        echo -e "${RED}${CROSS_MARK} Found error in logs, updating RPC list and $config_file, then restarting $service_name...${NC}"
 
         # Download the latest RPC list
         download_rpc_file
@@ -87,25 +92,42 @@ while true; do
         # Stop the service
         systemctl stop "$service_name"
         
-        if echo "$logs" | grep -q "$gas_string"; then
-            echo "Found error and gas used in logs, performing rollback..."
-        else
-            echo "Performing rollback after changing RPC..."
+        echo -e "${YELLOW}${WRENCH} Performing rollback after changing RPC...${NC}"
+
+        # Check if Go is installed
+        if ! command -v go &> /dev/null; then
+            echo -e "${YELLOW}${WRENCH} Go is not installed. Installing Go...${NC}"
+            VERSION="1.21.6"
+            ARCH="amd64"
+            curl -O -L "https://golang.org/dl/go${VERSION}.linux-${ARCH}.tar.gz"
+            tar -xf "go${VERSION}.linux-${ARCH}.tar.gz"
+            sudo rm -rf /usr/local/go
+            sudo mv -v go /usr/local
+            export GOPATH=$HOME/go
+            export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+            echo 'export GOPATH=$HOME/go' >> ~/.bash_profile
+            echo 'export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin' >> ~/.bash_profile
+            source ~/.bash_profile
+            go version
         fi
 
         # Perform rollback
         cd ~/tracks
         go run cmd/main.go rollback
-        echo "Rollback completed, starting $service_name..."
+        go run cmd/main.go rollback
+        go run cmd/main.go rollback
+        echo -e "${GREEN}${CHECK_MARK} Rollback completed, starting $service_name...${NC}"
 
         # Start the service
         systemctl start "$service_name"
-        echo "Service $service_name started"
+        echo -e "${GREEN}${CHECK_MARK} Service $service_name started${NC}"
 
         # Sleep for the restart delay
+        echo -e "${BLUE}${HOURGLASS} Waiting for $restart_delay seconds before next check...${NC}"
         sleep "$restart_delay"
     else
         # If no errors found, just wait before checking again
-        sleep "$restart_delay"
+        echo -e "${GREEN}${CHECK_MARK} No errors found. Waiting for 5 minutes before next check...${NC}"
+        sleep 300
     fi
 done
