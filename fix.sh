@@ -18,6 +18,7 @@ script_url="https://raw.githubusercontent.com/vahidnfc33/airchain-node-ez-instal
 script_path=$(readlink -f "$0")
 hash_file="$HOME/.fix_script_hash"
 update_interval=300  # 5 minutes in seconds
+error_check_interval=120  # 2 minutes in seconds
 
 # Define service name and log search strings
 service_name="stationd"
@@ -28,6 +29,9 @@ rpc_file="$HOME/okrpc.txt"
 
 # Initialize error count
 error_count=0
+
+# Ensure the system has the correct timezone data
+sudo apt-get install -y tzdata
 
 # Function to update the script
 update_script() {
@@ -67,23 +71,33 @@ select_random_url() {
     echo "$random_url"
 }
 
+# Function to display error count and next check time
+display_status() {
+    # Set timezone to Iran time
+    export TZ='Asia/Tehran'
+    local next_error_check=$(date -d "+2 minutes" +"%H:%M:%S")
+    local next_update_check=$(date -d "+5 minutes" +"%H:%M:%S")
+    echo -e "${YELLOW}${WRENCH} Total errors found: $error_count${NC}"
+    echo -e "${BLUE}${HOURGLASS} Next error check at: $next_error_check (Iran Time)${NC}"
+    echo -e "${BLUE}${HOURGLASS} Next update check at: $next_update_check (Iran Time)${NC}"
+    echo -e "${BLUE}${HOURGLASS} Error check interval: 2 minutes${NC}"
+    echo -e "${BLUE}${HOURGLASS} Update check interval: 5 minutes${NC}"
+}
+
 echo -e "${YELLOW}${ROCKET} Script started to monitor errors in PC logs...${NC}"
 echo -e "${YELLOW}${ROCKET} Airchain fix script RUN${NC}"
 
 # Update script at startup
 update_script
 
-# Function to display error count and next check time
-display_status() {
-    local next_check=$(date -d "+5 minutes" +"%H:%M:%S")
-    echo -e "${YELLOW}${WRENCH} Total errors found: $error_count${NC}"
-    echo -e "${BLUE}${HOURGLASS} Next check at: $next_check${NC}"
-    echo -e "${BLUE}${HOURGLASS} Check interval: 5 minutes${NC}"
-}
+# Initialize the SECONDS variable for timing
+SECONDS=0
 
 while true; do
-    # Check for updates in each loop iteration
-    update_script
+    # Check for updates every 5 minutes
+    if (( SECONDS % update_interval == 0 )); then
+        update_script
+    fi
 
     # Get the last 10 lines of service logs
     logs=$(systemctl status "$service_name" --no-pager | tail -n 10)
@@ -153,6 +167,9 @@ while true; do
     # Display error count and next check time
     display_status
 
-    # Wait for 5 minutes before the next check
-    sleep 300
+    # Wait for 2 minutes before the next error check
+    sleep $error_check_interval
+    
+    # Update the SECONDS variable
+    SECONDS=$((SECONDS + error_check_interval))
 done
