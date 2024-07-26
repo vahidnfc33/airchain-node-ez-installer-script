@@ -79,7 +79,9 @@ display_status() {
     local next_update_check=$(date -d "+5 minutes" +"%H:%M:%S")
     echo -e "${YELLOW}${WRENCH} Total errors found: $error_count${NC}"
     echo -e "${BLUE}${HOURGLASS} Next error check at: $next_error_check (Iran Time)${NC}"
+    echo -e "${BLUE}${HOURGLASS} Next update check at: $next_update_check (Iran Time)${NC}"
     echo -e "${BLUE}${HOURGLASS} Error check interval: 2 minutes${NC}"
+    echo -e "${BLUE}${HOURGLASS} Update check interval: 5 minutes${NC}"
 }
 
 echo -e "${YELLOW}${ROCKET} Script started to monitor errors in PC logs...${NC}"
