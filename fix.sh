@@ -18,12 +18,12 @@ script_url="https://raw.githubusercontent.com/vahidnfc33/airchain-node-ez-instal
 script_path=$(readlink -f "$0")
 hash_file="$HOME/.fix_script_hash"
 update_interval=300  # 5 minutes in seconds
-error_check_interval=120  # 2 minutes in seconds
+error_check_interval=180  # 2 minutes in seconds
 
 # Define service name and log search strings
 service_name="stationd"
 error_string="ERROR|error|Failed|ERR|with gas used|Failed to Init VRF|Client connection error: error while requesting node|Error in getting sender balance : http post error: Post|rpc error: code = ResourceExhausted desc = request ratelimited|rpc error: code = ResourceExhausted desc = request ratelimited: System blob rate limit for quorum 0|Retrying the transaction after 10 seconds...|Error in VerifyPod transaction Error|Error in ValidateVRF transaction Error|Failed to get transaction by hash: not found|json_rpc_error_string: error while requesting node|can not get junctionDetails.json data|JsonRPC should not be empty at config file|Error in getting address|Failed to load conf info|error unmarshalling config|Error in initiating sequencer nodes due to the above error|Failed to Transact Verify pod| VRF record is nil"
-restart_delay=120
+restart_delay=180
 config_file="$HOME/.tracks/config/sequencer.toml"
 rpc_file="$HOME/okrpc.txt"
 
