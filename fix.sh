@@ -26,6 +26,9 @@ restart_delay=120
 config_file="$HOME/.tracks/config/sequencer.toml"
 rpc_file="$HOME/okrpc.txt"
 
+# Initialize error count
+error_count=0
+
 # Function to update the script
 update_script() {
     echo -e "${BLUE}${WRENCH} Checking for script updates...${NC}"
@@ -70,6 +73,14 @@ echo -e "${YELLOW}${ROCKET} Airchain fix script RUN${NC}"
 # Update script at startup
 update_script
 
+# Function to display error count and next check time
+display_status() {
+    local next_check=$(date -d "+5 minutes" +"%H:%M:%S")
+    echo -e "${YELLOW}${WRENCH} Total errors found: $error_count${NC}"
+    echo -e "${BLUE}${HOURGLASS} Next check at: $next_check${NC}"
+    echo -e "${BLUE}${HOURGLASS} Check interval: 5 minutes${NC}"
+}
+
 while true; do
     # Check for updates in each loop iteration
     update_script
@@ -81,6 +92,9 @@ while true; do
     echo -e "${BLUE}${WRENCH} Checking for errors in $service_name logs...${NC}"
     
     if echo "$logs" | grep -Eqi "$error_string"; then
+        # Increment error count
+        ((error_count++))
+
         # Display the specific error found
         error_found=$(echo "$logs" | grep -Ei "$error_string" | head -n 1)
         echo -e "${RED}${CROSS_MARK} Error found: $error_found${NC}"
@@ -134,7 +148,11 @@ while true; do
     else
         # If no errors found, display the wait time
         echo -e "${GREEN}${CHECK_MARK} No errors found.${NC}"
-        echo -e "${BLUE}${HOURGLASS} Waiting for 5 minutes before next check...${NC}"
-        sleep 300
     fi
+
+    # Display error count and next check time
+    display_status
+
+    # Wait for 5 minutes before the next check
+    sleep 300
 done
