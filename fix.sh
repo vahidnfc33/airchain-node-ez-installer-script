@@ -147,9 +147,11 @@ while true; do
 
         # Perform rollback
         cd ~/tracks
+        sudo systemctl stop stationd
         go run cmd/main.go rollback
         go run cmd/main.go rollback
         go run cmd/main.go rollback
+        sudo systemctl restart stationd
         echo -e "${GREEN}${CHECK_MARK} Rollback completed, starting $service_name...${NC}"
 
         # Start the service
