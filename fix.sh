@@ -77,8 +77,14 @@ while true; do
     # Get the last 10 lines of service logs
     logs=$(systemctl status "$service_name" --no-pager | tail -n 10)
 
+    # Display error checking details
+    echo -e "${BLUE}${WRENCH} Checking for errors in $service_name logs...${NC}"
+    
     if echo "$logs" | grep -Eqi "$error_string"; then
-        echo -e "${RED}${CROSS_MARK} Found error in logs, updating RPC list and $config_file, then restarting $service_name...${NC}"
+        # Display the specific error found
+        error_found=$(echo "$logs" | grep -Ei "$error_string" | head -n 1)
+        echo -e "${RED}${CROSS_MARK} Error found: $error_found${NC}"
+        echo -e "${RED}${CROSS_MARK} Updating RPC list and $config_file, then restarting $service_name...${NC}"
 
         # Download the latest RPC list
         download_rpc_file
@@ -122,12 +128,13 @@ while true; do
         systemctl start "$service_name"
         echo -e "${GREEN}${CHECK_MARK} Service $service_name started${NC}"
 
-        # Sleep for the restart delay
+        # Display restart delay
         echo -e "${BLUE}${HOURGLASS} Waiting for $restart_delay seconds before next check...${NC}"
         sleep "$restart_delay"
     else
-        # If no errors found, just wait before checking again
-        echo -e "${GREEN}${CHECK_MARK} No errors found. Waiting for 5 minutes before next check...${NC}"
+        # If no errors found, display the wait time
+        echo -e "${GREEN}${CHECK_MARK} No errors found.${NC}"
+        echo -e "${BLUE}${HOURGLASS} Waiting for 5 minutes before next check...${NC}"
         sleep 300
     fi
 done
