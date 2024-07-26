@@ -100,7 +100,7 @@ while true; do
     fi
 
     # Get the last 10 lines of service logs
-    logs=$(systemctl status "$service_name" --no-pager | tail -n 10)
+    logs=$(systemctl status "$service_name" --no-pager | tail -n 5)
 
     # Display error checking details
     echo -e "${BLUE}${WRENCH} Checking for errors in $service_name logs...${NC}"
