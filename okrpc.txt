@@ -1,1 +1,1 @@
-https://junction-testnet-rpc.nodesync.top/
+https://t-airchains.rpc.utsa.tech/
