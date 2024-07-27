@@ -1,1 +1,1 @@
-https://airchains-testnet-rpc.crouton.digital/
+https://airchain-testnet-rpc.shazoe.xyz/
