@@ -1,2 +1,1 @@
-https://airchains-rpc.sbgid.com/
 https://airchains-testnet-rpc.crouton.digital/
