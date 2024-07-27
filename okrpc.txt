@@ -1,1 +1,1 @@
-https://airchains-rpc.sbgid.com/
+https://junction-testnet-rpc.nodesync.top/
