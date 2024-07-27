@@ -153,7 +153,7 @@ while true; do
         echo -e "${GREEN}${CHECK_MARK} Rollback completed, starting $service_name...${NC}"
 
         # Start the service
-        systemctl start "$service_name"
+        systemctl restart "$service_name"
         echo -e "${GREEN}${CHECK_MARK} Service $service_name started${NC}"
 
         # Display restart delay
