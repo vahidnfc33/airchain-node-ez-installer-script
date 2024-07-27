@@ -1,2 +1,1 @@
-https://airchains.rpc.t.stavr.tech/
 https://t-airchains.rpc.utsa.tech/
