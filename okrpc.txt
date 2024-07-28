@@ -1,1 +1,2 @@
 https://testnet.rpc.airchains.silentvalidator.com/
+https://junction-rpc.validatorvn.com/
