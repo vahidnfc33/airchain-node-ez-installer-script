@@ -1,1 +1,1 @@
-https://t-airchains.rpc.utsa.tech/
+https://testnet.rpc.airchains.silentvalidator.com/
